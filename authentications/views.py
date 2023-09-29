@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login, logout, get_user_model
-from .serializers import UserSerializer, UserRegisterSerializer, UserLoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, PasswordResetSerializer
+from .serializers import UserSerializer, UserRegisterSerializer, RegisterUserThroughSocialSerializer, GetGoogleAuthSerializer, UserLoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, PasswordResetSerializer
 from .utils import send_activation_email, TokenGenerator
 from django.utils.encoding import force_bytes
 from .models import User
@@ -141,3 +141,35 @@ class PasswordResetView(generics.GenericAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "Invalid password reset link."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetGoogleAuthCredentials(APIView):
+    def post(self, request):
+        data = request.data
+        serializer = GetGoogleAuthSerializer(data=request.data)
+        if serializer.is_valid():
+            secret = serializer.validated_data['secret']
+
+            if secret == 'dddds':
+                return Response({
+                    'client_id': 'google-client-id',
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': 'key is invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class RegisterUserThroughGoogleView(APIView):
+    def post(self, request):
+        serializer = RegisterUserThroughSocialSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.is_verified = True
+            user.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access_token': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
