@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'openai',
     'authentications',
     'accounts',
+    'tokens',
     'brainbox'
 ]
 

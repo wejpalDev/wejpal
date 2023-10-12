@@ -11,6 +11,7 @@ from .serializers import UserSerializer, UserRegisterSerializer, RegisterUserThr
 from .utils import send_activation_email, TokenGenerator
 from django.utils.encoding import force_bytes
 from .models import User
+from tokens.utils import create_user_balance
 
 class UserRegisterView(APIView):
     def post(self, request):
@@ -20,6 +21,7 @@ class UserRegisterView(APIView):
             user.is_verified = False
             user.save()
             send_activation_email(user, request)
+            token = create_user_balance(user) # create wallet with default 1000 tokens
             return Response({"msg": "Registration successful. Please check your email for verification instructions."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -167,6 +169,7 @@ class RegisterUserThroughGoogleView(APIView):
             user = serializer.save()
             user.is_verified = True
             user.save()
+            token = create_user_balance(user) # create wallet with default 1000 tokens
             refresh = RefreshToken.for_user(user)
             return Response({
                 'access_token': str(refresh.access_token),

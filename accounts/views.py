@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UpdateUserAccountSerializer
 from .utils import get_logged_in_user
-from .models import UserDetails
+from .models import UserDetail
 from authentications.models import User
 
 # Create your views here.
@@ -13,8 +13,8 @@ class GetUserProfile(generics.GenericAPIView):
     def get(self, request):
         user = get_logged_in_user(request)
         try:
-            details = UserDetails.objects.get(user=user)
-        except UserDetails.DoesNotExist:
+            details = UserDetail.objects.get(user=user)
+        except UserDetail.DoesNotExist:
             details = ''
 
         content =  {
@@ -45,7 +45,7 @@ class UpdateUserAccount(APIView):
             if email != user.email:
                 try:
                     allowedEmail = User.objects.get(email=email)
-                except UserDetails.DoesNotExist:
+                except UserDetail.DoesNotExist:
                     allowedEmail = False
                 
                 if allowedEmail == False:
@@ -53,14 +53,14 @@ class UpdateUserAccount(APIView):
                     user.save()
 
             try:
-                details = UserDetails.objects.get(user=user)
+                details = UserDetail.objects.get(user=user)
                 details.first_name = first_name
                 details.last_name = last_name
                 details.date_of_birth = date_of_birth
                 details.phone_number = phone_number
                 details.save()
-            except UserDetails.DoesNotExist:
-                details = UserDetails.objects.create(user=user,first_name=first_name,last_name=last_name,date_of_birth=date_of_birth,phone_number=phone_number)
+            except UserDetail.DoesNotExist:
+                details = UserDetail.objects.create(user=user,first_name=first_name,last_name=last_name,date_of_birth=date_of_birth,phone_number=phone_number)
 
             
             return Response({"status": "success","data": "User Profile Updated."}, status=status.HTTP_201_CREATED)
