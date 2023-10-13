@@ -30,8 +30,29 @@ class GetUserProfile(generics.GenericAPIView):
         return Response({"status": "success","data": content}, status=status.HTTP_200_OK)
 
 
-class UpdateUserAccount(APIView):
+class CreateUserAccount(APIView):
     def post(self, request):
+        serializer = UpdateUserAccountSerializer(data=request.data)
+        if serializer.is_valid():
+            user = get_logged_in_user(request)
+
+            email = serializer.data["email"]
+            first_name = serializer.data["first_name"]
+            last_name = serializer.data["last_name"]
+            date_of_birth = serializer.data["date_of_birth"]
+            phone_number = serializer.data["phone_number"]
+
+            try:
+                details = UserDetail.objects.create(user=user,first_name=first_name,last_name=last_name,date_of_birth=date_of_birth,phone_number=phone_number)
+            except:
+                return Response({"status": "failed","data": "Could not create profile."}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({"status": "success","data": "User Profile Updated."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateUserAccount(APIView):
+    def put(self, request):
         serializer = UpdateUserAccountSerializer(data=request.data)
         if serializer.is_valid():
             user = get_logged_in_user(request)
@@ -60,8 +81,7 @@ class UpdateUserAccount(APIView):
                 details.phone_number = phone_number
                 details.save()
             except UserDetail.DoesNotExist:
-                details = UserDetail.objects.create(user=user,first_name=first_name,last_name=last_name,date_of_birth=date_of_birth,phone_number=phone_number)
+                return Response({"status": "failed","data": "Could not update profile."}, status=status.HTTP_400_BAD_REQUEST)
 
-            
             return Response({"status": "success","data": "User Profile Updated."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
