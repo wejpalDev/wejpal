@@ -24,18 +24,18 @@ def create_user_balance(user):
     return user_token
 
 
-def increase_balance(user, amount):
+def increase_balance(user, amount, bet = None, comment = None):
     try:
         user_token = Token.objects.get(user=user)
     except Token.DoesNotExist:
         user_token = Token.objects.create(user=user,balance=new_user_balance,paused_balance=0,created_at=current_date,updated_at=current_date)
 
     current_date = datetime.now()
-    new_balance = user_token.balance + amount
+    new_balance = float(user_token.balance) + float(amount)
     
     with transaction.atomic():
         try:
-            token_history = TokenHistory.objects.create(token=user_token,balance_before=user_token.balance,balance_after=new_balance,created_at=current_date,updated_at=current_date)
+            token_history = TokenHistory.objects.create(token=user_token,bet=bet,comment=comment,balance_before=user_token.balance,balance_after=new_balance,created_at=current_date,updated_at=current_date)
         except:
             raise ParseError("Could not update wallet history")
 
@@ -49,18 +49,18 @@ def increase_balance(user, amount):
     return {"balance": new_balance}
 
 
-def decrease_balance(user, amount):
+def decrease_balance(user, amount, bet = None, comment = None):
     try:
         user_token = Token.objects.get(user=user)
     except Token.DoesNotExist:
         raise ParseError("Could not find the user wallet")
 
     current_date = datetime.now()
-    new_balance = user_token.balance - amount
+    new_balance = float(user_token.balance) - float(amount)
     
     with transaction.atomic():
         try:
-            token_history = TokenHistory.objects.create(token=user_token,balance_before=user_token.balance,balance_after=new_balance,created_at=current_date,updated_at=current_date)
+            token_history = TokenHistory.objects.create(token=user_token,bet=bet,comment=comment,balance_before=user_token.balance,balance_after=new_balance,created_at=current_date,updated_at=current_date)
         except:
             raise ParseError("Could not update wallet history")
 
@@ -81,7 +81,7 @@ def pause_balance(user, amount):
         raise ParseError("Could not find the user wallet")
 
     current_date = datetime.now()
-    new_balance = user_token.balance - amount
+    new_balance = float(user_token.balance) - float(amount)
     
     with transaction.atomic():
         try:
@@ -107,7 +107,7 @@ def reverse_pause_balance(user, amount):
         raise ParseError("Could not find the user wallet")
 
     current_date = datetime.now()
-    new_balance = user_token.balance + amount
+    new_balance = float(user_token.balance) + float(amount)
     
     with transaction.atomic():
         try:

@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # Register your models here.
 @admin.register(TokenHistory)
 class TokenHistoryAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'email', 'balance_before', 'balance_after', 'updated_at')
+    list_display = ('first_name', 'last_name', 'email', 'balance_before', 'balance_after', 'comment', 'updated_at')
 
     def first_name(self, data):
         try: 

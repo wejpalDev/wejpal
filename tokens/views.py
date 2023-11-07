@@ -39,6 +39,7 @@ class GetUserTokenHistory(generics.GenericAPIView):
             token_history.append({
                 'balance_before': history.balance_before,
                 'balance_after': history.balance_after,
+                'comment': history.comment,
                 'updated_at': history.updated_at
             })
             

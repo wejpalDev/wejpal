@@ -3,7 +3,6 @@ from rest_framework import generics
 from .serializers import InputSerializer
 from rest_framework.response import Response
 from rest_framework import status
-
 import openai
 from langchain import OpenAI
 import requests
@@ -20,10 +19,10 @@ class GenerateValidateView(generics.GenericAPIView):
         serializer = self.serializer_class(data=data)
 
         if serializer.is_valid():
-            
+            os.environ['OPENAI_API_KEY'] = "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"
             davinci = OpenAI(model_name="text-davinci-003")
 
-            api_key = os.environ.get('SERAP_KEY')
+            api_key = '400edd51438e5859e9ed259ee62b0673f7dcff223f83e87ec914e538f53170c3'
 
             query= serializer.data["prompt"]
             # Set up the API endpoint URL
