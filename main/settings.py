@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-_#*hip9qpljl29l2hb*58m0#xy8=sy3u!-hjyvjz$a+u%@wb)1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['wejpal.onrender.com']
 
 
 # Application definition
