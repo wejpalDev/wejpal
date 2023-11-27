@@ -20,7 +20,7 @@ class UserRegisterView(APIView):
             user = serializer.save()
             user.is_verified = False
             user.save()
-            send_activation_email(user, request)
+            # send_activation_email(user, request)
             token = create_user_balance(user) # create wallet with default 1000 tokens
             return Response({"msg": "Registration successful. Please check your email for verification instructions."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
