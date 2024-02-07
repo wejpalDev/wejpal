@@ -27,7 +27,7 @@ class EmailThread(threading.Thread):
 def send_activation_email(user, request):
     current_site = get_current_site(request)
     subject= 'Activate your account'
-    body = render_to_string('authentication/activate.html',{
+    body = render_to_string('authentications/activate.html',{
         'user': user,
         'domain': current_site,
         'uid':urlsafe_base64_encode(force_bytes(user.pk)),
@@ -39,11 +39,20 @@ def send_activation_email(user, request):
                  )
     EmailThread(email).start()
 
+def send_otp_email(user, request):
+    subject= 'Activate your account'
+    body = "Your OTP is " + user.sub
+
+    email = EmailMessage(subject=subject, body=body,from_email=settings.EMAIL_FROM_USER,
+                 to=[user.email]
+                 )
+    EmailThread(email).start()
+
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
-        return (six.text_type(user.pk)+six.text_type(timestamp)+six.text_type(user.email_verified))
+        return (six.text_type(user.pk)+six.text_type(timestamp))
 
 
 account_activation_token = TokenGenerator()

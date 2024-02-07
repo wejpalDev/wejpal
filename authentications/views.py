@@ -7,11 +7,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login, logout, get_user_model
-from .serializers import UserSerializer, UserRegisterSerializer, RegisterUserThroughSocialSerializer, GetGoogleAuthSerializer, UserLoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, PasswordResetSerializer
-from .utils import send_activation_email, TokenGenerator
+from .serializers import RegisterUserWithOtp, SetPasswordSerializer, RegisterUserOTPValid, UserRegisterSerializer, RegisterUserThroughSocialSerializer, GetGoogleAuthSerializer, UserLoginSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, PasswordResetSerializer
+from .utils import send_activation_email, TokenGenerator, send_otp_email
 from django.utils.encoding import force_bytes
 from .models import User
+from accounts.models import UserDetail
 from tokens.utils import create_user_balance
+from django.contrib.auth.hashers import make_password, check_password
 
 class UserRegisterView(APIView):
     def post(self, request):
@@ -173,6 +175,65 @@ class RegisterUserThroughGoogleView(APIView):
             refresh = RefreshToken.for_user(user)
             return Response({
                 'access_token': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class RegisterUserFirstStage(APIView):
+    def post(self, request):
+        serializer = RegisterUserWithOtp(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.is_verified = True
+            user.save()
+            token = create_user_balance(user) # create wallet with default 1000 tokens
+            details = UserDetail.objects.create(user=user,first_name=request.data['first_name'],last_name=request.data['last_name'])
+            
+            send_otp_email(user, request)
+            return Response({
+                'detail': 'otp has been sent to the registered email address'
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class RegisterUserVerifyOTP(APIView):
+    def post(self, request):
+        serializer = RegisterUserOTPValid(data=request.data)
+        if serializer.is_valid():
+            
+            try:
+                user = User.objects.get(email=serializer.validated_data['email'])
+            except User.DoesNotExist:
+                return Response({'detail': 'provided email does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            if (user.sub != serializer.validated_data['otp']):
+                return Response({'detail': 'provided otp is incorrect'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            user.is_verified = True
+            user.save()
+
+            return Response({
+                'detail': 'otp is verified'
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class RegisterUserSetPassword(APIView):
+    def post(self, request):
+        serializer = SetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user.password = make_password(serializer.validated_data['password'])
+            user.save()
+
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access_token': str(refresh.access_token)
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -7,5 +7,8 @@ urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='register'),
     path('verify-email/<str:uidb64>/<str:token>/', VerifyEmailView.as_view(), name='verify-email'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
-    path('login/', UserLoginView.as_view(), name='login')
+    path('login/', UserLoginView.as_view(), name='login'),
+    path('register/init/', RegisterUserFirstStage.as_view(), name='register-init'),
+    path('register/otp/verify/', RegisterUserVerifyOTP.as_view(), name='register-otp-verify'),
+    path('register/complete/', RegisterUserSetPassword.as_view(), name='register-complete')
 ]
