@@ -191,6 +191,7 @@ class RegisterUserFirstStage(APIView):
             
             send_otp_email(user, request)
             return Response({
+                'status': True,
                 'detail': 'otp has been sent to the registered email address'
             }, status=status.HTTP_200_OK)
 
@@ -204,15 +205,16 @@ class RegisterUserVerifyOTP(APIView):
             try:
                 user = User.objects.get(email=serializer.validated_data['email'])
             except User.DoesNotExist:
-                return Response({'detail': 'provided email does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'status': False, 'data': 'provided email does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
             
             if (user.sub != serializer.validated_data['otp']):
-                return Response({'detail': 'provided otp is incorrect'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'status': False, 'data': 'provided otp is incorrect'}, status=status.HTTP_401_UNAUTHORIZED)
             
             user.is_verified = True
             user.save()
 
             return Response({
+                'status': True,
                 'detail': 'otp is verified'
             }, status=status.HTTP_200_OK)
 
@@ -226,13 +228,14 @@ class RegisterUserSetPassword(APIView):
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, "data": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             
             user.password = make_password(serializer.validated_data['password'])
             user.save()
 
             refresh = RefreshToken.for_user(user)
             return Response({
+                'status': True,
                 'access_token': str(refresh.access_token)
             }, status=status.HTTP_200_OK)
 
